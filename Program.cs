@@ -40,12 +40,11 @@ namespace SecurityProject1
             return sw.ToString();
         }
     }
-
-   
+    
+    
     
     internal class Program
     {
-        
         public static void Main(string[] args)
         {
             RSAEncryption rsa = new RSAEncryption();
@@ -92,20 +91,34 @@ namespace SecurityProject1
             
             kb.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hash;
             kb.HashAlgorithm = CngAlgorithm.Sha256;
+            byte [] kbPublicKey = kb.PublicKey.ToByteArray();
+            
+            
             //1b for kc
             ECDiffieHellmanCng kc = new ECDiffieHellmanCng();
-            
+            kc.ExportParameters(true);
             kc.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hash;
             kc.HashAlgorithm = CngAlgorithm.Sha256;
+            byte [] kcPublicKey = kb.PublicKey.ToByteArray();
             
-            byte[] kbKey = kb.DeriveKeyMaterial(kc.PublicKey);
-            byte[] kcKey = kc.DeriveKeyMaterial(kb.PublicKey);
+            byte[] k3Key = kb.DeriveKeyMaterial(CngKey.Import(kcPublicKey, CngKeyBlobFormat.EccPublicBlob));
+            byte[] k2Key = kc.DeriveKeyMaterial(CngKey.Import(kbPublicKey, CngKeyBlobFormat.EccPublicBlob));
 
-            var kbKeyString = Convert.ToBase64String(kbKey);
-            var kcKeyString = Convert.ToBase64String(kcKey);
+            var k3KeyString = Convert.ToBase64String(k3Key);
+            var k2KeyString = Convert.ToBase64String(k2Key);
             //2b kb and kc symmetric keys printed.
-            Console.WriteLine("kb key: " + kbKeyString);
-            Console.WriteLine("kc key: " + kcKeyString);
+            Console.WriteLine("k3 key: " + k3KeyString);
+            Console.WriteLine("k2 key: " + k2KeyString);
+            //5a
+            var hash = new HMACSHA256(k3Key);
+            var hashBytes = Convert.ToBase64String(hash.ComputeHash(k3Key));
+            
+            Console.WriteLine("k3 with HMAC-SHA256: " + hashBytes);
+            //5b
+            var hmac = new HMACSHA256();
+            var k2_HMAC_SHA256 = Convert.ToBase64String(hmac.ComputeHash(k2Key));
+            
+            Console.WriteLine("k2 with HMAC-SHA256: " + k2_HMAC_SHA256);
             
             
             // Part 3
