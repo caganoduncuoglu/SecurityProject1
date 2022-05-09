@@ -109,17 +109,6 @@ namespace SecurityProject1
             //2b kb and kc symmetric keys printed.
             Console.WriteLine("k3 key: " + k3KeyString);
             Console.WriteLine("k2 key: " + k2KeyString);
-            //5a
-            var hash = new HMACSHA256(k3Key);
-            var hashBytes = Convert.ToBase64String(hash.ComputeHash(k3Key));
-            
-            Console.WriteLine("k3 with HMAC-SHA256: " + hashBytes);
-            //5b
-            var hmac = new HMACSHA256();
-            var k2_HMAC_SHA256 = Convert.ToBase64String(hmac.ComputeHash(k2Key));
-            
-            Console.WriteLine("k2 with HMAC-SHA256: " + k2_HMAC_SHA256);
-            
             
             // Part 3
             string plainText = "aaaaaaa";
@@ -133,28 +122,21 @@ namespace SecurityProject1
             bool verifySignature = rsa.GetCSP().VerifyData(plainTextArr, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             Console.WriteLine("Is Digital Signature Verified?: " + verifySignature);
             
+            
+            //5a
+            var hash = new HMACSHA256(k3Key);
+            var hashBytes = Convert.ToBase64String(hash.ComputeHash(k3Key));
+            
+            Console.WriteLine("k3 with HMAC-SHA256: " + hashBytes);
+            //5b
+            var hmac = new HMACSHA256();
+            var k2_HMAC_SHA256 = Convert.ToBase64String(hmac.ComputeHash(k2Key));
+            
+            Console.WriteLine("k2 with HMAC-SHA256: " + k2_HMAC_SHA256);
+            
+            
+            
         }
 
-        static string ComputeSha256Hash(string rawData)  
-        {  
-            // Create a SHA256   
-            using (SHA256 sha256Hash = SHA256.Create())  
-            {  
-                // ComputeHash - returns byte array  
-                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));  
-  
-                // Convert byte array to a string   
-                StringBuilder builder = new StringBuilder();  
-                for (int i = 0; i < bytes.Length; i++)  
-                {  
-                    builder.Append(bytes[i].ToString("x2"));  
-                }  
-                return builder.ToString();  
-            }  
-        }  
-       
-
-
-     
     }
 }
