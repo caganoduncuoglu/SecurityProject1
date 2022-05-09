@@ -85,6 +85,25 @@ namespace SecurityProject1
             Console.WriteLine("Decrypted K1 : " + decryptedDataK1);
             Console.WriteLine("Decrypted K2 : " + decryptedDataK2);
 
+            //1b for kb
+            ECDiffieHellmanCng kb = new ECDiffieHellmanCng();
+            
+            kb.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hash;
+            kb.HashAlgorithm = CngAlgorithm.Sha256;
+            //1b for kc
+            ECDiffieHellmanCng kc = new ECDiffieHellmanCng();
+            
+            kc.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hash;
+            kc.HashAlgorithm = CngAlgorithm.Sha256;
+            
+            byte[] kbKey = kb.DeriveKeyMaterial(kc.PublicKey);
+            byte[] kcKey = kc.DeriveKeyMaterial(kb.PublicKey);
+
+            var kbKeyString = Convert.ToBase64String(kbKey);
+            var kcKeyString = Convert.ToBase64String(kcKey);
+            //2b kb and kc symmetric keys printed.
+            Console.WriteLine("kb key: " + kbKeyString);
+            Console.WriteLine("kc key: " + kcKeyString);
 
         }
     }
