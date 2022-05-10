@@ -44,7 +44,6 @@ namespace SecurityProject1
     }
     
     
-    
     internal class Program
     {
         public static void Main(string[] args)
@@ -112,7 +111,7 @@ namespace SecurityProject1
             Console.WriteLine("k3 key: " + k3KeyString);
             Console.WriteLine("k2 key: " + k2KeyString);
             
-            // Part 3
+            // Part 3 TO DO:
             string plainText = "aaaaaaa";
             Console.WriteLine("Plain Text: " + plainText);
 
@@ -138,9 +137,25 @@ namespace SecurityProject1
             
             //4
             //Read Image File
-            Image original_data = Image.FromFile(@"C:\Users\PC\RiderProjects\SecurityProject1\aang-Copy.jpg");
+            Image original_data = Image.FromFile(@"..\..\aang-Copy.jpg");
             byte[] original_data_arr = ImageToByteArray(original_data);
             String original_data_string = Convert.ToBase64String(original_data_arr);
+            
+            //i - AES 128 bit with CBC
+            using (var random = new RNGCryptoServiceProvider())
+            {
+                // Key1 is 128 bit
+                byte[] encrypted = EncryptStringToBytes_Aes(original_data_string, key1Generated);
+                
+                // Decrypt the bytes to a string. 
+                string roundtrip = DecryptStringFromBytes_Aes(encrypted, key1Generated);
+
+                //Display the original data and the decrypted data.
+                Console.WriteLine("Original:   {0}", original_data_string);
+                Console.WriteLine("Encrypted (b64-encode): {0}", Convert.ToBase64String(encrypted));
+                Console.WriteLine("Round Trip: {0}", roundtrip);
+            }
+            
             //ii - AES 256 bit with CBC
             using (var random = new RNGCryptoServiceProvider())
             {
