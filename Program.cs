@@ -188,14 +188,11 @@ namespace SecurityProject1
 
             //iii - AES 256 bit with CTR
 
-            Image originalDataPng = Image.FromFile(@"..\..\aang-Copy.png");
-            var ms = new MemoryStream();
-            originalDataPng.Save(ms, ImageFormat.Png);
             
             ///encryption for iii.
             Stopwatch elapsedTimeenc = new Stopwatch();
             elapsedTimeenc.Start();
-            using (Stream inputStream = ms)
+            using (Stream inputStream = File.OpenRead(@"..\..\aang-Copy.png"))
             using (Stream outputStream = File.Create("EncryptedAES_256_CTR.txt"))
             {
                 AesCtrTransform(k3Key, inputStream, outputStream);
@@ -234,7 +231,7 @@ namespace SecurityProject1
         }
 
 
-        }
+        
         
         static void AesCtrTransform(byte[] key, Stream inputStream, Stream outputStream)
         {
