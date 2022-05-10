@@ -147,13 +147,19 @@ namespace SecurityProject1
                 // Key1 is 128 bit
                 byte[] encrypted = EncryptStringToBytes_Aes(original_data_string, key1Generated);
                 
+                File.WriteAllBytes("EncryptedAES_128_CBC.txt", encrypted);
+                
                 // Decrypt the bytes to a string. 
-                string roundtrip = DecryptStringFromBytes_Aes(encrypted, key1Generated);
-
+                byte[] roundtrip = DecryptStringFromBytes_Aes(encrypted, key1Generated);
+                
+                File.WriteAllBytes("DecrptedAES_128_CBC.png", roundtrip);
+                
+                
+                
                 //Display the original data and the decrypted data.
-                Console.WriteLine("Original:   {0}", original_data_string);
-                Console.WriteLine("Encrypted (b64-encode): {0}", Convert.ToBase64String(encrypted));
-                Console.WriteLine("Round Trip: {0}", roundtrip);
+                //Console.WriteLine("Original:   {0}", original_data_string);
+                //Console.WriteLine("Encrypted (b64-encode): {0}", Convert.ToBase64String(encrypted));
+                //Console.WriteLine("Round Trip: {0}", roundtrip);
             }
             
             //ii - AES 256 bit with CBC
@@ -162,14 +168,18 @@ namespace SecurityProject1
 
                 // Encrypt the string to an array of bytes. 
                 byte[] encrypted = EncryptStringToBytes_Aes(original_data_string, k3Key);
-
+                
+                File.WriteAllBytes("EncryptedAES_256_CBC.txt", encrypted);
+                
                 // Decrypt the bytes to a string. 
-                string roundtrip = DecryptStringFromBytes_Aes(encrypted, k3Key);
+                byte[] roundtrip = DecryptStringFromBytes_Aes(encrypted, k3Key);
 
+                File.WriteAllBytes("DecrptedAES_256_CBC.png", roundtrip);
+                
                 //Display the original data and the decrypted data.
-                Console.WriteLine("Original:   {0}", original_data_string);
-                Console.WriteLine("Encrypted (b64-encode): {0}", Convert.ToBase64String(encrypted));
-                Console.WriteLine("Round Trip: {0}", roundtrip);
+                //Console.WriteLine("Original:   {0}", original_data_string);
+                //Console.WriteLine("Encrypted (b64-encode): {0}", Convert.ToBase64String(encrypted));
+                //Console.WriteLine("Round Trip: {0}", roundtrip);
             }
         }
         
@@ -221,12 +231,12 @@ namespace SecurityProject1
             return combinedIvCt;
         }
         
-        static string DecryptStringFromBytes_Aes(byte[] cipherTextCombined, byte[] Key)
+        static byte[] DecryptStringFromBytes_Aes(byte[] cipherTextCombined, byte[] Key)
         {
             
             // Declare the string used to hold 
             // the decrypted text. 
-            string plaintext = null;
+            byte[] plaintext = null;
 
             // Create an Aes object 
             // with the specified key and IV. 
@@ -257,7 +267,7 @@ namespace SecurityProject1
 
                             // Read the decrypted bytes from the decrypting stream
                             // and place them in a string.
-                            plaintext = srDecrypt.ReadToEnd();
+                            plaintext = Convert.FromBase64String(srDecrypt.ReadToEnd());
                         }
                     }
                 }
