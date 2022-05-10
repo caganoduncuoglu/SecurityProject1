@@ -7,6 +7,11 @@ using System.Net.Mime;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml.Serialization;
 using System.Drawing;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
+
 namespace SecurityProject1
 {
     public class RSAEncryption
@@ -171,8 +176,75 @@ namespace SecurityProject1
                 Console.WriteLine("Encrypted (b64-encode): {0}", Convert.ToBase64String(encrypted));
                 Console.WriteLine("Round Trip: {0}", roundtrip);
             }
+
+            //iii - AES 256 bit with CTR
+            Stopwatch elapsedTime = new Stopwatch();
+            elapsedTime.Start();
+            using (Stream inputStream = File.OpenRead(@"..\..\aang-Copy.jpg"))
+            using (Stream outputStream = File.Create("fileCtr.txt"))
+            {
+                AesCtrTransform(k3Key, inputStream, outputStream);
+            }
+            elapsedTime.Stop();
+            String elapsedTimeString = (elapsedTime.ElapsedMilliseconds).ToString();
+            String elapRes =  String.Concat("AES 256 bit with CTR is completed in ", elapsedTimeString, " ms." );
+            Console.WriteLine(elapRes);
+            
+        }
+
+        static void AesCtrTransform(byte[] key, Stream inputStream, Stream outputStream)
+        {
+            using (Aes aesAlg = Aes.Create())
+            {
+                SymmetricAlgorithm aes = new AesManaged { Mode = CipherMode.ECB, Padding = PaddingMode.None };
+
+                aesAlg.Key = key;
+                aesAlg.GenerateIV();
+                byte[] IV = aesAlg.IV;
+                byte[] counter = (byte[])IV.Clone();
+
+                int blockSize = aesAlg.BlockSize / 8;
+
+                if(IV.Length != blockSize)
+                {
+                    throw new ArgumentException ("IV length must be same as block size");
+                }
+
+                Queue<Byte> xorMask = new Queue<Byte>();
+
+                var IVZero = new byte[blockSize];
+                ICryptoTransform counterEncryptor = aesAlg.CreateEncryptor(aesAlg.Key, IVZero);
+
+
+                int i;
+                while((i = inputStream.ReadByte()) != -1)
+                {
+                    if(xorMask.Count == 0)
+                    {
+                        var counterModeBlock = new byte[blockSize];
+                        counterEncryptor.TransformBlock(counter, 0, counter.Length, counterModeBlock, 0);
+
+                        for(var m = counter.Length - 1; m >= 0 ; m--)
+                        {
+                            if(++counter[m] != 0)
+                            {
+                                break;
+                            }
+                        }
+                        foreach (var k in counterModeBlock)
+                        {
+                            xorMask.Enqueue(k);
+                        }
+                    }
+                    
+                    var mask = xorMask.Dequeue();
+                    outputStream.WriteByte((byte)(((byte)i) ^ mask));
+                }
+            }
         }
         
+        
+
         static byte[] EncryptStringToBytes_Aes(string plainText, byte[] Key)
         {
             byte[] encrypted;
