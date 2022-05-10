@@ -10,6 +10,7 @@ using System.Drawing;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Security.Policy;
 using System.Threading;
 using System.Drawing.Imaging;
 
@@ -54,6 +55,7 @@ namespace SecurityProject1
     {
         public static void Main(string[] args)
         {
+            Console.WriteLine(" PART 1-2:");
             RSAEncryption rsa = new RSAEncryption();
             Console.WriteLine($"Public Key:  {rsa.GetPublicKey()} \n");
             Console.WriteLine($"Private Key:  {rsa.GetPrivateKey()} \n");
@@ -118,31 +120,27 @@ namespace SecurityProject1
             Console.WriteLine("k2 key: " + k2KeyString);
             
             // Part 3 TO DO:
-            string plainText = "aaaaaaa";
-            Console.WriteLine("Plain Text: " + plainText);
+            Console.WriteLine(" \nPART 3:");
+            string plainText = File.ReadAllText(@"..\..\Part3.txt");
+            //Console.WriteLine("Plain Text: " + plainText);
 
             byte[] plainTextArr = Encoding.ASCII.GetBytes(plainText);
 
+            using (HashAlgorithm algorithm = SHA256.Create())
+            {
+                var hashedPlainText = algorithm.ComputeHash(Encoding.UTF8.GetBytes(plainText));
+                Console.WriteLine("SHA256 Hashed Text: " + Convert.ToBase64String(hashedPlainText));
+            }
+            
             byte[] signature = rsa.GetCSP().SignData(plainTextArr, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             Console.WriteLine("Digital Signature: " + Convert.ToBase64String(signature));
 
             bool verifySignature = rsa.GetCSP().VerifyData(plainTextArr, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             Console.WriteLine("Is Digital Signature Verified?: " + verifySignature);
-            
-            
-            //5a
-            var hash = new HMACSHA256(k3Key);
-            var hashBytes = Convert.ToBase64String(hash.ComputeHash(k3Key));
-            
-            Console.WriteLine("k3 with HMAC-SHA256: " + hashBytes);
-            //5b
-            var hmac = new HMACSHA256();
-            var k2_HMAC_SHA256 = Convert.ToBase64String(hmac.ComputeHash(k2Key));
-            
-            Console.WriteLine("k2 with HMAC-SHA256: " + k2_HMAC_SHA256);
-            
+
             //4
             //Read Image File
+            Console.WriteLine(" \nPART 4:");
             Image original_data = Image.FromFile(@"..\..\aang-Copy.jpg");
             byte[] original_data_arr = ImageToByteArray(original_data);
             String original_data_string = Convert.ToBase64String(original_data_arr);
@@ -207,6 +205,7 @@ namespace SecurityProject1
             String elapRes =  String.Concat("AES 256 bit encryption with CTR is completed in ", elapsedTimeString, " ms." );
             Console.WriteLine(elapRes);
             
+
             ///decryption for iii.
             Stopwatch elapsedTimedec = new Stopwatch();
             elapsedTimedec.Start();
@@ -219,6 +218,21 @@ namespace SecurityProject1
             String elapsedTimeStringdec = (elapsedTimedec.ElapsedMilliseconds).ToString();
             String elapResdec =  String.Concat("AES 256 bit decryption with CTR is completed in ", elapsedTimeStringdec, " ms." );
             Console.WriteLine(elapResdec);
+
+            Console.WriteLine(" \nPART 5:");
+            //5a
+            var hash = new HMACSHA256(k3Key);
+            var hashBytes = Convert.ToBase64String(hash.ComputeHash(k3Key));
+            
+            Console.WriteLine("k3 with HMAC-SHA256: " + hashBytes);
+            //5b
+            var hmac = new HMACSHA256();
+            var k2_HMAC_SHA256 = Convert.ToBase64String(hmac.ComputeHash(k2Key));
+            
+            Console.WriteLine("k2 with HMAC-SHA256: " + k2_HMAC_SHA256);
+            
+        }
+
 
         }
         
