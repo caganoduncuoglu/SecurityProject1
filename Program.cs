@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security.Policy;
 using System.Threading;
+using System.Drawing.Imaging;
 
 namespace SecurityProject1
 {
@@ -186,18 +187,38 @@ namespace SecurityProject1
             }
 
             //iii - AES 256 bit with CTR
-            Stopwatch elapsedTime = new Stopwatch();
-            elapsedTime.Start();
-            using (Stream inputStream = File.OpenRead(@"..\..\aang-Copy.jpg"))
-            using (Stream outputStream = File.Create("fileCtr.txt"))
+
+            Image originalDataPng = Image.FromFile(@"..\..\aang-Copy.png");
+            var ms = new MemoryStream();
+            originalDataPng.Save(ms, ImageFormat.Png);
+            
+            ///encryption for iii.
+            Stopwatch elapsedTimeenc = new Stopwatch();
+            elapsedTimeenc.Start();
+            using (Stream inputStream = ms)
+            using (Stream outputStream = File.Create("EncryptedAES_256_CTR.txt"))
             {
                 AesCtrTransform(k3Key, inputStream, outputStream);
             }
-            elapsedTime.Stop();
-            String elapsedTimeString = (elapsedTime.ElapsedMilliseconds).ToString();
-            String elapRes =  String.Concat("AES 256 bit with CTR is completed in ", elapsedTimeString, " ms." );
+            elapsedTimeenc.Stop();
+            String elapsedTimeString = (elapsedTimeenc.ElapsedMilliseconds).ToString();
+            String elapRes =  String.Concat("AES 256 bit encryption with CTR is completed in ", elapsedTimeString, " ms." );
             Console.WriteLine(elapRes);
             
+
+            ///decryption for iii.
+            Stopwatch elapsedTimedec = new Stopwatch();
+            elapsedTimedec.Start();
+            using (Stream inputStream = File.OpenRead("EncryptedAES_256_CTR.txt"))
+            using (Stream outputStream = File.Create("DecryptedAES_256_CTR.png"))
+            {
+                AesCtrTransform(k3Key, inputStream, outputStream);
+            }
+            elapsedTimedec.Stop();
+            String elapsedTimeStringdec = (elapsedTimedec.ElapsedMilliseconds).ToString();
+            String elapResdec =  String.Concat("AES 256 bit decryption with CTR is completed in ", elapsedTimeStringdec, " ms." );
+            Console.WriteLine(elapResdec);
+
             Console.WriteLine(" \nPART 5:");
             //5a
             var hash = new HMACSHA256(k3Key);
@@ -212,6 +233,9 @@ namespace SecurityProject1
             
         }
 
+
+        }
+        
         static void AesCtrTransform(byte[] key, Stream inputStream, Stream outputStream)
         {
             using (Aes aesAlg = Aes.Create())
