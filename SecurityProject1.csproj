@@ -45,6 +45,7 @@
     </ItemGroup>
     <ItemGroup>
       <Content Include="aang-Copy.jpg" />
+      <Content Include="Part3.txt" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
