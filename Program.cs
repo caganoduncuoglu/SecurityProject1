@@ -120,7 +120,7 @@ namespace SecurityProject1
             Console.WriteLine("k3 key: " + k3KeyString);
             Console.WriteLine("k3 variant key: " + k3_2KeyString);
             
-            // Part 3 TO DO:
+            // Part 3
             Console.WriteLine(" \nPART 3:");
             string plainText = File.ReadAllText(@"..\..\Part3.txt");
             //Console.WriteLine("Plain Text: " + plainText);
