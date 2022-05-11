@@ -153,11 +153,16 @@ namespace SecurityProject1
                 byte[] encrypted = EncryptStringToBytes_Aes(original_data_string, key1Generated);
                 
                 File.WriteAllBytes("EncryptedAES_128_CBC.txt", encrypted);
+
+                // Change IV vector and encrypt again
+                byte[] encrypted_2 = EncryptStringToBytes_Aes(original_data_string, key1Generated);
+                
+                File.WriteAllBytes("EncryptedAES_128_CBC_2.txt", encrypted_2);
                 
                 // Decrypt the bytes to a string. 
                 byte[] roundtrip = DecryptStringFromBytes_Aes(encrypted, key1Generated);
                 
-                File.WriteAllBytes("DecrptedAES_128_CBC.png", roundtrip);
+                File.WriteAllBytes("DecrptedAES_128_CBC.jpg", roundtrip);
                 
                 
                 
@@ -179,7 +184,7 @@ namespace SecurityProject1
                 // Decrypt the bytes to a string. 
                 byte[] roundtrip = DecryptStringFromBytes_Aes(encrypted, k3Key);
 
-                File.WriteAllBytes("DecrptedAES_256_CBC.png", roundtrip);
+                File.WriteAllBytes("DecrptedAES_256_CBC.jpg", roundtrip);
                 
                 //Display the original data and the decrypted data.
                 //Console.WriteLine("Original:   {0}", original_data_string);
@@ -192,7 +197,7 @@ namespace SecurityProject1
             ///encryption for iii.
             Stopwatch elapsedTimeenc = new Stopwatch();
             elapsedTimeenc.Start();
-            using (Stream inputStream = File.OpenRead(@"..\..\aang-Copy.png"))
+            using (Stream inputStream = File.OpenRead(@"..\..\aang-Copy.jpg"))
             using (Stream outputStream = File.Create("EncryptedAES_256_CTR.txt"))
             {
                 AesCtrTransform(k3Key, salt, inputStream, outputStream);
@@ -207,7 +212,7 @@ namespace SecurityProject1
             Stopwatch elapsedTimedec = new Stopwatch();
             elapsedTimedec.Start();
             using (Stream inputStream = File.OpenRead("EncryptedAES_256_CTR.txt"))
-            using (Stream outputStream = File.Create("DecryptedAES_256_CTR.png"))
+            using (Stream outputStream = File.Create("DecryptedAES_256_CTR.jpg"))
             {
                 AesCtrTransform(k3Key, salt, inputStream, outputStream);
             }
