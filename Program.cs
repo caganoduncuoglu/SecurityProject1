@@ -108,16 +108,17 @@ namespace SecurityProject1
             kc.ExportParameters(true);
             kc.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hash;
             kc.HashAlgorithm = CngAlgorithm.Sha256;
-            byte [] kcPublicKey = kb.PublicKey.ToByteArray();
+            byte [] kcPublicKey = kc.PublicKey.ToByteArray();
             
+            //2b kb and kc symmetric keys printed.
             byte[] k3Key = kb.DeriveKeyMaterial(CngKey.Import(kcPublicKey, CngKeyBlobFormat.EccPublicBlob));
-            byte[] k2Key = kc.DeriveKeyMaterial(CngKey.Import(kbPublicKey, CngKeyBlobFormat.EccPublicBlob));
+            byte[] k3Key2 = kc.DeriveKeyMaterial(CngKey.Import(kbPublicKey, CngKeyBlobFormat.EccPublicBlob));
 
             var k3KeyString = Convert.ToBase64String(k3Key);
-            var k2KeyString = Convert.ToBase64String(k2Key);
-            //2b kb and kc symmetric keys printed.
+            var k3_2KeyString = Convert.ToBase64String(k3Key2);
+            
             Console.WriteLine("k3 key: " + k3KeyString);
-            Console.WriteLine("k2 key: " + k2KeyString);
+            Console.WriteLine("k3 key: " + k3_2KeyString);
             
             // Part 3 TO DO:
             Console.WriteLine(" \nPART 3:");
@@ -187,19 +188,18 @@ namespace SecurityProject1
             }
 
             //iii - AES 256 bit with CTR
-
-            
+            byte[] salt = new byte[16];
             ///encryption for iii.
             Stopwatch elapsedTimeenc = new Stopwatch();
             elapsedTimeenc.Start();
             using (Stream inputStream = File.OpenRead(@"..\..\aang-Copy.png"))
             using (Stream outputStream = File.Create("EncryptedAES_256_CTR.txt"))
             {
-                AesCtrTransform(k3Key, inputStream, outputStream);
+                AesCtrTransform(k3Key, salt, inputStream, outputStream);
             }
             elapsedTimeenc.Stop();
             String elapsedTimeString = (elapsedTimeenc.ElapsedMilliseconds).ToString();
-            String elapRes =  String.Concat("AES 256 bit encryption with CTR is completed in ", elapsedTimeString, " ms." );
+            String elapRes =  String.Concat("AES 256 bit Encryption with CTR is completed in ", elapsedTimeString, " ms." );
             Console.WriteLine(elapRes);
             
 
@@ -209,12 +209,12 @@ namespace SecurityProject1
             using (Stream inputStream = File.OpenRead("EncryptedAES_256_CTR.txt"))
             using (Stream outputStream = File.Create("DecryptedAES_256_CTR.png"))
             {
-                AesCtrTransform(k3Key, inputStream, outputStream);
+                AesCtrTransform(k3Key, salt, inputStream, outputStream);
             }
             elapsedTimedec.Stop();
             String elapsedTimeStringdec = (elapsedTimedec.ElapsedMilliseconds).ToString();
-            String elapResdec =  String.Concat("AES 256 bit decryption with CTR is completed in ", elapsedTimeStringdec, " ms." );
-            Console.WriteLine(elapResdec);
+            //String elapResdec =  String.Concat("AES 256 bit decryption with CTR is completed in ", elapsedTimeStringdec, " ms." );
+            //Console.WriteLine(elapResdec);
 
             Console.WriteLine(" \nPART 5:");
             //5a
@@ -224,68 +224,63 @@ namespace SecurityProject1
             Console.WriteLine("k3 with HMAC-SHA256: " + hashBytes);
             //5b
             var hmac = new HMACSHA256();
-            var k2_HMAC_SHA256 = Convert.ToBase64String(hmac.ComputeHash(k2Key));
+            var k2_HMAC_SHA256 = Convert.ToBase64String(hmac.ComputeHash(key2Generated));
             
             Console.WriteLine("k2 with HMAC-SHA256: " + k2_HMAC_SHA256);
             
         }
 
 
-        
-        
-        static void AesCtrTransform(byte[] key, Stream inputStream, Stream outputStream)
+        public static void AesCtrTransform(byte[] key, byte[] salt, Stream inputStream, Stream outputStream)
         {
-            using (Aes aesAlg = Aes.Create())
+            SymmetricAlgorithm aes = new AesManaged { Mode = CipherMode.ECB, Padding = PaddingMode.None };
+
+            int blockSize = aes.BlockSize / 8;
+
+            if (salt.Length != blockSize)
             {
-                SymmetricAlgorithm aes = new AesManaged { Mode = CipherMode.ECB, Padding = PaddingMode.None };
+                throw new ArgumentException(
+                    "Salt size must be same as block size " +
+                    $"(actual: {salt.Length}, expected: {blockSize})");
+            }
 
-                aesAlg.Key = key;
-                aesAlg.GenerateIV();
-                byte[] IV = aesAlg.IV;
-                byte[] counter = (byte[])IV.Clone();
+            byte[] counter = (byte[])salt.Clone();
 
-                int blockSize = aesAlg.BlockSize / 8;
+            Queue<byte> xorMask = new Queue<byte>();
 
-                if(IV.Length != blockSize)
+            var zeroIv = new byte[blockSize];
+            ICryptoTransform counterEncryptor = aes.CreateEncryptor(key, zeroIv);
+
+            int b;
+            while ((b = inputStream.ReadByte()) != -1)
+            {
+                if (xorMask.Count == 0)
                 {
-                    throw new ArgumentException ("IV length must be same as block size");
-                }
+                    var counterModeBlock = new byte[blockSize];
 
-                Queue<Byte> xorMask = new Queue<Byte>();
+                    counterEncryptor.TransformBlock(
+                        counter, 0, counter.Length, counterModeBlock, 0);
 
-                var IVZero = new byte[blockSize];
-                ICryptoTransform counterEncryptor = aesAlg.CreateEncryptor(aesAlg.Key, IVZero);
-
-
-                int i;
-                while((i = inputStream.ReadByte()) != -1)
-                {
-                    if(xorMask.Count == 0)
+                    for (var i2 = counter.Length - 1; i2 >= 0; i2--)
                     {
-                        var counterModeBlock = new byte[blockSize];
-                        counterEncryptor.TransformBlock(counter, 0, counter.Length, counterModeBlock, 0);
-
-                        for(var m = counter.Length - 1; m >= 0 ; m--)
+                        if (++counter[i2] != 0)
                         {
-                            if(++counter[m] != 0)
-                            {
-                                break;
-                            }
-                        }
-                        foreach (var k in counterModeBlock)
-                        {
-                            xorMask.Enqueue(k);
+                            break;
                         }
                     }
-                    
-                    var mask = xorMask.Dequeue();
-                    outputStream.WriteByte((byte)(((byte)i) ^ mask));
+
+                    foreach (var b2 in counterModeBlock)
+                    {
+                        xorMask.Enqueue(b2);
+                    }
                 }
+
+                var mask = xorMask.Dequeue();
+                outputStream.WriteByte((byte)(((byte)b) ^ mask));
             }
         }
         
         
-
         static byte[] EncryptStringToBytes_Aes(string plainText, byte[] Key)
         {
             byte[] encrypted;
@@ -300,7 +295,7 @@ namespace SecurityProject1
 
                 aesAlg.GenerateIV();
                 IV = aesAlg.IV;
-                Console.WriteLine(IV.Length);
+                //Console.WriteLine(IV.Length);
                 aesAlg.Mode = CipherMode.CBC;
 
                 var encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
@@ -328,7 +323,7 @@ namespace SecurityProject1
             Array.Copy(encrypted, 0, combinedIvCt, IV.Length, encrypted.Length);
             
             stopwatch.Stop();
-            Console.WriteLine("Elapsed Time is {0} ms", stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("AES Encryption with CBC is completed in {0} ms", stopwatch.ElapsedMilliseconds);
             
             // Return the encrypted bytes from the memory stream. 
             return combinedIvCt;
