@@ -118,7 +118,7 @@ namespace SecurityProject1
             var k3_2KeyString = Convert.ToBase64String(k3Key2);
             
             Console.WriteLine("k3 key: " + k3KeyString);
-            Console.WriteLine("k3 key: " + k3_2KeyString);
+            Console.WriteLine("k3 variant key: " + k3_2KeyString);
             
             // Part 3 TO DO:
             Console.WriteLine(" \nPART 3:");
